@@ -1,0 +1,110 @@
+/* ==========================================================================
+   Responsive Breakpoints & Container Design Tokens
+   ========================================================================== */
+
+:root {
+  /* Screen Breakpoint Reference Values */
+  --breakpoint-sm: 640px;   /* Mobile landscape / small tablets */
+  --breakpoint-md: 768px;   /* Tablets */
+  --breakpoint-lg: 1024px;  /* Laptops / Desktops */
+  --breakpoint-xl: 1280px;  /* Large desktops */
+  --breakpoint-2xl: 1536px; /* Ultra-wide displays */
+
+  /* Fluid Layout Container Max Widths */
+  --container-sm: 600px;
+  --container-md: 720px;
+  --container-lg: 960px;
+  --container-xl: 1200px;
+  --container-2xl: 1400px;
+
+  /* Fluid Horizontal Padding Variables */
+  --gutter-mobile: 1rem;    /* 16px */
+  --gutter-tablet: 1.5rem;  /* 24px */
+  --gutter-desktop: 2rem;   /* 32px */
+}
+
+/* ==========================================================================
+   Responsive Utility Classes
+   ========================================================================== */
+
+/* Standard Responsive Container */
+.responsive-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--gutter-mobile);
+  padding-right: var(--gutter-mobile);
+}
+
+@media (min-width: 768px) {
+  .responsive-container {
+    padding-left: var(--gutter-tablet);
+    padding-right: var(--gutter-tablet);
+    max-width: var(--container-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-container {
+    padding-left: var(--gutter-desktop);
+    padding-right: var(--gutter-desktop);
+    max-width: var(--container-lg);
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-container {
+    max-width: var(--container-xl);
+  }
+}
+
+/* Visibility Control Utilities */
+/* 1. Hide on mobile (< 768px) */
+@media (max-width: 767px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* 2. Hide on desktop (>= 768px) */
+@media (min-width: 768px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* 3. Mobile only display (768px+) */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* 4. Desktop only display (< 1024px) */
+@media (max-width: 1023px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Responsive Grid Utilities (Pure CSS Fallback) */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive-2col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive-3col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .grid-responsive-4col {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
