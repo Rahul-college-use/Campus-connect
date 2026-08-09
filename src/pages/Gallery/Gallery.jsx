@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GALLERY_DATA, CATEGORIES } from '../gallery/galleryData';
+import { GALLERY_DATA, CATEGORIES } from '../Gallery/galleryData';
 
 const ITEMS_PER_PAGE = 12;
 
