@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, replace, useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/ui/Toast/ToastContext';
 import Button from '../../components/ui/Button/Button';
 import FormField from '../../components/ui/FormField/FormField';
@@ -43,14 +43,36 @@ export default function Login() {
       if (data && data.token) {
         contextLogin(data.user, data.token);
       }
+      const role = data.user.role
 
       toast.addToast({
         title: 'Login successful',
         message: 'Welcome back! You are now logged in.',
         variant: 'success',
-      });
 
-      navigate('/admin');
+      });
+      if (role == 'admin') {
+        toast.addToast({
+          title: 'Admin Dashboard',
+          message: `Hello ${data.user.name} 'Welcome back! You are now Admin Dashboard.`,
+          variant: 'info',
+          position: "top-left",
+          duration: 3000,
+        });
+
+        navigate('/admin', { replace: true });
+      }
+      else {
+        toast.addToast({
+          title: 'Admin Dashboard',
+          message: `Hello ${data.user.name} Welcome back! You are now Student Dashboard.`,
+          variant: 'info',
+          position: "top-left",
+          duration: 3000,
+        });
+        navigate('/student/events', { replace: true });
+
+      }
 
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Invalid email or password.';
@@ -59,6 +81,8 @@ export default function Login() {
         title: 'Access Denied',
         message: errMsg,
         variant: 'error',
+        position: "top-right",
+        duration: 3000,
       });
     } finally {
       setLoading(false);

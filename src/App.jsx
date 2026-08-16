@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider, useToast } from './components/ui/Toast/ToastContext';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { ToastProvider } from './components/ui/Toast/ToastContext';
 import MainLayout from './layouts/MainLayout';
 
 // Pages
@@ -19,39 +18,72 @@ import CommonPage from './components/common/Footer/CommonPage';
 // Context
 import { AuthProvider, useAuth } from './context/auth.context.jsx';
 
-//admin
+// Admin Pages
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
 import AdminEvents from './pages/Admin/Events/explore/ManageEvents';
 import CreateEvent from './pages/Admin/Events/explore/CreateEvent';
 import PostPhoto from './pages/Admin/Events/explore/PostPhoto';
 import GalleryAdmin from './pages/Admin/Events/gallery/Gallery';
 import ExploreEvents from './pages/Admin/Events/explore/ExploreEvents';
 
-//student
+// Student Pages
 import MyEvents from './pages/Student/Events/explore/MyEvents.jsx';
 import MyCertificates from './pages/Student/Events/explore/MyCertificates.jsx';
-import MyExploreEvent from './pages/Student/Events/explore/ExploreEvents.jsx'
-import MyGallery from './pages/Student/Events/explore/Gallery.jsx'
+import MyExploreEvent from './pages/Student/Events/explore/ExploreEvents.jsx';
+import MyGallery from './pages/Student/Events/explore/Gallery.jsx';
 
-// Protected Route Component (Toast और Redirect हैंडलिंग)
-const ProtectedAdmin = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  const toast = useToast();
+// ✅ 1. Dynamic Root Index Component (Role-based Home view)
+const HomeIndex = () => {
+  const { isAuthenticated, user } = useAuth();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      toast.addToast({
-        title: 'Access Denied',
-        message: 'You need to log in first to access the admin panel.',
-        variant: 'error',
-      });
-    }
-  }, []);
+  if (!isAuthenticated || !user) {
+    return <Home />;
+  }
 
+  const role = user?.role?.toLowerCase();
+
+  if (role === 'admin') {
+    return <AdminDashboard />;
+  }
+
+  if (role === 'student' || role === 'students') {
+    return <MyExploreEvent />;
+  }
+
+  return <Home />;
+};
+
+// ✅ 2. Clean & Safe Protected Route (No Toast Spam / No State Lag)
+const ProtectedRoute = ({ allowedRoles = [], children }) => {
+  const { isAuthenticated, user } = useAuth();
+
+  // 1. Agar logged in nahi hai -> Seedha login page bhej do
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  // 2. Login state update hote time lag ho to spinner dikhao (false unauthorized se bachne ke liye)
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const userRole = user?.role?.toLowerCase();
+  const rolesArray = Array.isArray(allowedRoles)
+    ? allowedRoles.map((r) => r.toLowerCase())
+    : [allowedRoles.toLowerCase()];
+
+  const isRoleAllowed = rolesArray.length === 0 || rolesArray.includes(userRole);
+
+  // 3. Agar wrong role hai -> Home redirect
+  if (!isRoleAllowed) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children ? children : <Outlet />;
 };
 
 export default function App() {
@@ -60,28 +92,22 @@ export default function App() {
       <ToastProvider position="top-right">
         <BrowserRouter>
           <ScrollToTop />
-
           <Routes>
-            {/* Main Layout Route Wrap */}
             <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
-              <Route path="about" element={<About />} />
-              <Route path="explore" element={<Explore />} />
-              <Route path="gallery" element={<Gallery />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="events/:eventId" element={<EventDetails />} />
+              
+              {/* ✅ Dynamic Home: Admin -> AdminDashboard | Student -> Events | Guest -> Home */}
+              <Route index element={<HomeIndex />} />
 
-              {/* ✅ Protected Admin Route */}
+              {/* ✅ Protected Admin Routes */}
               <Route
                 path="admin"
                 element={
-                  <ProtectedAdmin>
+                  <ProtectedRoute allowedRoles={['admin']}>
                     <Admin />
-                  </ProtectedAdmin>
+                  </ProtectedRoute>
                 }
               >
+                <Route index element={<AdminDashboard />} />
                 <Route path="events" element={<ExploreEvents />} />
                 <Route path="manager" element={<AdminEvents />} />
                 <Route path="events/create" element={<CreateEvent />} />
@@ -89,15 +115,30 @@ export default function App() {
                 <Route path="events/post-photo" element={<PostPhoto />} />
               </Route>
 
-              {/* Student Routes */}
-              <Route path="student">
-                
-                <Route path='events' element={<MyExploreEvent/>}/>
+              {/* ✅ Protected Student Routes */}
+              <Route
+                path="student"
+                element={
+                  <ProtectedRoute allowedRoles={['student', 'students']}>
+                    <Outlet />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<MyExploreEvent />} />
+                <Route path="events" element={<MyExploreEvent />} />
                 <Route path="my-events" element={<MyEvents />} />
-                <Route path='gallery' element={<MyGallery/>}/>
+                <Route path="gallery" element={<MyGallery />} />
                 <Route path="certificates" element={<MyCertificates />} />
-                
               </Route>
+
+              {/* Public Pages */}
+              <Route path="about" element={<About />} />
+              <Route path="explore" element={<Explore />} />
+              <Route path="gallery" element={<Gallery />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="events/:eventId" element={<EventDetails />} />
 
               {/* Common Footer Pages */}
               <Route path="features" element={<CommonPage />} />
@@ -112,12 +153,20 @@ export default function App() {
               <Route path="privacy" element={<CommonPage />} />
               <Route path="terms" element={<CommonPage />} />
 
-              {/* 404 Fallback Route */}
-              <Route path="*" element={<div className="text-center py-12">404 - Page Not Found</div>} />
+              {/* 404 Fallback */}
+              <Route
+                path="*"
+                element={
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <h1 className="text-4xl font-bold text-gray-800">404</h1>
+                    <p className="text-gray-500 mt-2">Page Not Found</p>
+                  </div>
+                }
+              />
             </Route>
           </Routes>
         </BrowserRouter>
       </ToastProvider>
-    </AuthProvider >
+    </AuthProvider>
   );
 }

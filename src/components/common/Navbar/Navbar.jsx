@@ -15,7 +15,7 @@ export default function Navbar() {
   
   // Example user shape: { name: 'Alex', role: 'students' } or null
   const { user } = useContext(AuthContext) || { user: null };
-  console.log("user : ",user)
+  // console.log("user : ",user)
 
   // Determine links to display based on the user's role
   const currentRole = user?.role || 'general';

@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button/Button';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import { DEFAULT_EVENTS } from '../../utils/events';
 import { GALLERY_DATA } from '../Gallery/galleryData';
+import AdminDashboard from './AdminDashboard';
 
 export default function Admin() {
   const [events] = useLocalStorage('campus-events', DEFAULT_EVENTS);
@@ -21,14 +22,8 @@ export default function Admin() {
 
   return (
     <div className="space-y-8">
-      {/* Header Banner */}
-      
-
-      {/* Navigation Sub-bar */}
-      
-
-      {/* Dynamic Sub-Route Outlet */}
       <main>
+
         <Outlet />
       </main>
     </div>

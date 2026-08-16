@@ -13,6 +13,7 @@ export const NAV_LINKS = {
     { label: "My Certificates", path: "/student/certificates" },
   ],
   admin: [
+    { label: "Home", path: "/" },
     { label: "Explore Events", path: "/admin/events" },
     { label: "Manage Events", path: "/admin/manager" },
     { label: "Create Event", path: "/admin/events/create" },

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 
-// 1. Context Create करें
-export const AuthContext = createContext();
+// 1. Context Create
+export const AuthContext = createContext(null);
 
 // 2. Provider Component
 export const AuthProvider = ({ children }) => {
@@ -18,7 +18,8 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem("token")));
+  // ✅ Token aur user dono exist karte hain tabhi user authenticated mana jayega
+  const isAuthenticated = Boolean(token && user);
 
   // Login Handler
   const login = (userData, authToken) => {
@@ -29,13 +30,8 @@ export const AuthProvider = ({ children }) => {
 
     if (userData) {
       localStorage.setItem("user", JSON.stringify(userData));
-      if (userData.role) {
-        // localStorage.setItem("role", userData.role);
-      }
       setUser(userData);
     }
-
-    setIsAuthenticated(true);
   };
 
   // Logout Handler
@@ -46,7 +42,6 @@ export const AuthProvider = ({ children }) => {
 
     setToken(null);
     setUser(null);
-    setIsAuthenticated(false);
   };
 
   return (
@@ -56,5 +51,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 3. Custom Hook
-export const useAuth = () => useContext(AuthContext);
+// 3. Custom Hook (Safety check ke sath)
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
