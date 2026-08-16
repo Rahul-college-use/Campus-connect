@@ -1,29 +1,68 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/ui/Toast/ToastContext';
 import Button from '../../components/ui/Button/Button';
 import FormField from '../../components/ui/FormField/FormField';
 import Input from '../../components/ui/Input/Input';
 
+import { useAuth } from '../../context/auth.context';
+import apiServices from '../../context/api.context';
+
 export default function Login() {
+
+  const { login: contextLogin } = useAuth();
+  // console.log(contextLogin)
+  const navigate = useNavigate();
+  const toast = useToast();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const toast = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setError('');
+
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
     }
 
-    setError('');
-    toast.addToast({
-      title: 'Login successful',
-      message: 'Welcome back! You are now logged in.',
-      variant: 'success',
-    });
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await apiServices.login({ email, password });
+      const data = response.data; // Axios रिस्पॉन्स डेटा
+
+      if (data && data.token) {
+        contextLogin(data.user, data.token);
+      }
+
+      toast.addToast({
+        title: 'Login successful',
+        message: 'Welcome back! You are now logged in.',
+        variant: 'success',
+      });
+
+      navigate('/admin');
+
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Invalid email or password.';
+      setError(errMsg);
+      toast.addToast({
+        title: 'Access Denied',
+        message: errMsg,
+        variant: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,7 +99,7 @@ export default function Login() {
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <FormField label="Email" htmlFor="login-email" error={error && !email ? error : ''}>
+            <FormField label="Email" htmlFor="login-email">
               <Input
                 id="login-email"
                 type="email"
@@ -70,7 +109,7 @@ export default function Login() {
               />
             </FormField>
 
-            <FormField label="Password" htmlFor="login-password" error={error && !password ? error : ''}>
+            <FormField label="Password" htmlFor="login-password">
               <Input
                 id="login-password"
                 type="password"
@@ -80,10 +119,18 @@ export default function Login() {
               />
             </FormField>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <Button type="submit" variant="primary" size="lg" className="w-full sm:w-auto">Login</Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </Button>
               <Link to="/register" className="text-sm font-semibold text-blue-600 transition hover:text-blue-800">
                 Need an account? Register
               </Link>
